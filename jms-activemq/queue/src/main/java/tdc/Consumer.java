@@ -28,19 +28,23 @@ public class Consumer {
 
 	public void onStart(@Observes StartupEvent ev) {
 		scheduler.submit(() -> {
-			try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE);
-					JMSConsumer consumer = context.createConsumer(context.createQueue("values-queue"));) {
-				while (true) {
-					Message message = consumer.receive();
-					logger.info("Value: " + message.getBody(String.class));
-				}
-			} catch (JMSException e) {
-				throw new RuntimeException();
-			}
+			consumeMessage();
 		});
 	}
 
 	public void onStop(@Observes ShutdownEvent ev) {
 		scheduler.shutdown();
+	}
+
+	private void consumeMessage() {
+		try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE);
+				JMSConsumer consumer = context.createConsumer(context.createQueue("values-queue"));) {
+			while (true) {
+				Message message = consumer.receive();
+				logger.info("Value: " + message.getBody(String.class));
+			}
+		} catch (JMSException e) {
+			throw new RuntimeException();
+		}
 	}
 }

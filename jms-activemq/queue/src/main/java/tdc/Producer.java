@@ -28,15 +28,19 @@ public class Producer {
 
 	public void onStart(@Observes StartupEvent ev) {
 		scheduler.scheduleWithFixedDelay(() -> {
-			try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
-				String value = Integer.toString(random.nextInt(100));
-				logger.info("Publishing value: " + value);
-				context.createProducer().send(context.createQueue("values-queue"), value);
-			}
+			publishMessage();
 		}, 0L, 2L, TimeUnit.SECONDS);
 	}
 
 	public void onStop(@Observes ShutdownEvent ev) {
 		scheduler.shutdown();
+	}
+
+	private void publishMessage() {
+		try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
+			String value = Integer.toString(random.nextInt(100));
+			logger.info("Publishing value: " + value);
+			context.createProducer().send(context.createQueue("values-queue"), value);
+		}
 	}
 }
