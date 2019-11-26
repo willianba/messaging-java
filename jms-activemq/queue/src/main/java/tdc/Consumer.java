@@ -20,34 +20,27 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
-public class Consumer implements Runnable {
-  @Inject
-  ConnectionFactory connectionFactory;
-  private final ExecutorService scheduler = Executors.newSingleThreadExecutor();
-  private final Logger logger = LoggerFactory.getLogger(Consumer.class);
+public class Consumer {
+	@Inject
+	ConnectionFactory connectionFactory;
+	private final ExecutorService scheduler = Executors.newSingleThreadExecutor();
+	private final Logger logger = LoggerFactory.getLogger(Consumer.class);
 
-  public void onStart(@Observes StartupEvent ev) {
-    scheduler.submit(this);
-  }
+	public void onStart(@Observes StartupEvent ev) {
+		scheduler.submit(() -> {
+			try (JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE);
+					JMSConsumer consumer = context.createConsumer(context.createQueue("values-queue"));) {
+				while (true) {
+					Message message = consumer.receive();
+					logger.info("Value: " + message.getBody(String.class));
+				}
+			} catch (JMSException e) {
+				throw new RuntimeException();
+			}
+		});
+	}
 
-  public void onStop(@Observes ShutdownEvent ev) {
-    scheduler.shutdown();
-  }
-
-  @Override
-  public void run() {
-    try {
-      JMSContext context = connectionFactory.createContext(Session.AUTO_ACKNOWLEDGE);
-      JMSConsumer consumer = context.createConsumer(context.createQueue("values-queue"));
-      while (true) {
-        Message message = consumer.receive();
-        if (message == null) {
-          return;
-        }
-        logger.info("Value: " + message.getBody(String.class));
-      }
-    } catch (JMSException e) {
-      throw new RuntimeException();
-    }
-  }
+	public void onStop(@Observes ShutdownEvent ev) {
+		scheduler.shutdown();
+	}
 }
