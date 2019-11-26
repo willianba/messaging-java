@@ -33,7 +33,7 @@ public class Publisher {
       this.index.set(0);
     }
     String key = keys[this.index.get()];
-    rabbitTemplate.convertAndSend(directExchange.getName(), key, String.valueOf(random.nextInt(100)));
+    rabbitTemplate.convertAndSend(directExchange.getName(), key, Integer.toString(random.nextInt(100)));
     LOGGER.info("Sent to Routing Key: " + key);
   }
 }
