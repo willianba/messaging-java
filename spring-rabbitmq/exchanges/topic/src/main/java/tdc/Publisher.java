@@ -24,7 +24,7 @@ public class Publisher {
   @Autowired
   private TopicExchange topicExchange;
 
-  @Value("${binding.list}")
+  @Value("${routing.keys.list}")
   private String[] keys;
 
   @Scheduled(fixedRate = 2000)
@@ -33,7 +33,8 @@ public class Publisher {
       this.index.set(0);
     }
     String key = keys[this.index.get()];
-    rabbitTemplate.convertAndSend(topicExchange.getName(), key, Integer.toString(random.nextInt(100)));
-    LOGGER.info("Sent to Routing Key: " + key);
+    String value = Integer.toString(random.nextInt(100));
+    LOGGER.info("Publishing value {} to Routing Key {}", value, key);
+    rabbitTemplate.convertAndSend(topicExchange.getName(), key, value);
   }
 }
