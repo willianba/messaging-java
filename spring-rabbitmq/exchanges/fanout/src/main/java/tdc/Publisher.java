@@ -20,6 +20,6 @@ public class Publisher {
 
   @Scheduled(fixedRate = 2000)
   public void send() {
-    rabbitTemplate.convertAndSend(fanoutExchange.getName(), "", String.valueOf(random.nextInt(100)));
+    rabbitTemplate.convertAndSend(fanoutExchange.getName(), "", Integer.toString(random.nextInt(100)));
   }
 }
